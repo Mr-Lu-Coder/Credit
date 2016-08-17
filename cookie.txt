@@ -1,0 +1,5 @@
+# Netscape HTTP Cookie File
+# http://curl.haxx.se/rfc/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+us.nwpu.edu.cn	FALSE	/eams/	FALSE		JSESSIONID	F550968A1689AA1B356D5F7B8D44514D

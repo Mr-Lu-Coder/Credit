@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="lushangqi">
+    <link rel="icon" href="/static/default/icon.ico">
+
+
+    <title>学分积查询</title>
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <link href="http://v3.bootcss.com/examples/jumbotron/jumbotron.css" rel="stylesheet">
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="http://v3.bootcss.com/assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="http://v3.bootcss.com/assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<p id = 'creditSum'>{{sum}}</p>
+<p id = 'creditweight'>{{weight}}</p>
+<!第一步实现对每个学期的勾选，默认每个学期的每门课都勾上>
+<!第二步有一个对每个学期勾选的选项，
+1.如果处于勾选状态，初步是对所有的课程都勾选，
+可以对该学期的课程自由勾选
+2.如果处于取消勾选状态，初步是对所有的课程都没有勾选，
+可以对该学期的课程自由勾选
+3.变换状态时，如果取消勾选则切换至该学期所有的课都取消勾选
+如果勾选则切换至该学期所有的课都勾选>
+<!第三步开两个全局变量，记录所选的课程的学分>
+
+<div class="container">
+    <a href="/credit/login">退出登陆</a>
+    <p class= "text-danger" id="error" name = "error">{{error}}</p>
+    {% for term in term_list %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead>
+            <th>
+                <input type="checkbox" name="{{term.id}}" id="{{term.id}}"  checked="true" value="checkbox" onclick="termChange(this)"> {{term.time}}
+            </th>
+            <tr>
+				<th>课程名称</th>
+				<th>学分</th>
+				<th>成绩</th>
+			</tr>
+            </thead>
+        {% for course in term.courses_list %}
+            <tr>
+                <td class="atLeft"><input type="checkbox" name="{{term.id}}"  checked="true" id="{{course.id}}" onclick="courseChange(this)"> {{course.name}}</td>
+                <td>{{course.weight}}</td>
+                <td>{{course.grade}}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    </div>
+    {% endfor %}
+
+    <label id = "">学分积：</label><label id = "creditProduct">{{creditProduct}}</label>
+</div>
+
+<script language="javascript" type="text/javascript">
+sum_obj = document.getElementById("creditSum");
+weight_obj = document.getElementById("creditweight");
+creditProduct_obj = document.getElementById("creditProduct");
+sum_obj.style.display = "none";
+weight_obj.style.display = "none";
+
+function courseChange(obj) {
+    var sum = parseFloat(sum_obj.innerText);
+    var weight = parseFloat(weight_obj.innerText);
+    var curweight = parseFloat(obj.parentNode.parentNode.cells[1].innerText);
+    var curgrade = parseFloat(obj.parentNode.parentNode.cells[2].innerText);
+    if (obj.checked) {
+        sum += curweight*curgrade;
+        weight += curweight;
+    }else{
+        sum -= curweight*curgrade;
+        weight -= curweight;
+    }
+    if (weight == 0) {
+        newcredit = 0;
+    }
+    else {
+        newcredit = sum/weight;
+    }
+    sum_obj.innerHTML = String(sum.toFixed(3));
+    weight_obj.innerHTML = String(weight.toFixed(3));
+    creditProduct_obj.innerHTML = String(newcredit.toFixed(3));
+    //alert("你选的成绩是"+curweight+" "+curgrade+"当前学分积是"+newcredit);
+}
+function termChange(obj) {
+    sum = parseFloat(sum_obj.innerText);
+    weight = parseFloat(weight_obj.innerText);
+    table = obj.parentNode.parentNode.parentNode.parentNode;
+    //alert(table.rows.length);
+    //alert("分数为:"+sum+" "+weight);
+    for (var i = table.rows.length - 1; i >= 2; i--) {
+        checkbox = table.rows[i].cells[0].getElementsByTagName("INPUT")[0];
+        //alert(checkbox.nodeName);
+		if(obj.checked) {
+            if (!checkbox.checked) {
+            	//alert(checkbox.checked);
+                checkbox.checked=true;
+                var curweight = parseFloat(checkbox.parentNode.parentNode.cells[1].innerText);
+                var curgrade = parseFloat(checkbox.parentNode.parentNode.cells[2].innerText);
+                //alert("分数为:"+curweight+" "+curgrade);
+                sum += curweight*curgrade;
+                weight += curweight;
+            }
+		}else{
+		    if (checkbox.checked) {
+                checkbox.checked = false;
+                var curweight = parseFloat(checkbox.parentNode.parentNode.cells[1].innerText);
+                var curgrade = parseFloat(checkbox.parentNode.parentNode.cells[2].innerText);
+                //alert("分数为:"+curweight+" "+curgrade);
+                sum -= curweight*curgrade;
+                weight -= curweight;
+            }
+		}
+	}
+    //alert("修改后的sum："+sum);
+    if (weight == 0) {
+        newcredit = 0;
+    }
+    else {
+        newcredit = sum/weight;
+    }
+    //alert("修改后的sum："+sum);
+
+    sum_obj.innerHTML = String(sum.toFixed(3));
+    weight_obj.innerHTML = String(weight.toFixed(3));
+    creditProduct_obj.innerHTML = String(newcredit.toFixed(3));
+    //alert("你选的成绩是"+curweight+" "+curgrade+"当前学分积是"+newcredit);
+}
+
+
+</script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="http://v3.bootcss.com/assets/js/ie10-viewport-bug-workaround.js"></script>
+    <script src="http://cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="http://cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</body>
+</html>
